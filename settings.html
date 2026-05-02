@@ -240,7 +240,7 @@
 
 <div class="footer">
   <span class="status" id="status">Loading…</span>
-  <button class="primary" onclick="reassignStrangers()">Reassign Strangers in scene</button>
+  <button class="primary" onclick="reassignStrangers()">Reassign fallback placeholders in scene</button>
   <button class="danger" onclick="clearAllTokenData()">Clear all token name data from scene</button>
 </div>
 
@@ -488,9 +488,13 @@ window.clearAllTokenData = async function() {
 window.reassignStrangers = async function() {
   try {
     const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
+    const KNOWN_GENDERS = ["Male", "Female", "Non-binary", "Unknown"];
     const strangers = items.filter(i => {
       const meta = i.metadata[`${EXT_ID}/data`];
-      return meta && meta.placeholder && meta.placeholder.startsWith("Stranger");
+      if (!meta || !meta.placeholder) return false;
+      // Catch any fallback placeholder: Stranger, Unknown Figure, or anything
+      // that doesn't start with a recognised gender prefix
+      return !KNOWN_GENDERS.some(g => meta.placeholder.startsWith(g));
     });
     if (strangers.length === 0) {
       setStatus("No Stranger placeholders found in scene.", "");

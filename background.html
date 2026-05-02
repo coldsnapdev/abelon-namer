@@ -144,6 +144,14 @@ function applyDisplayName(it, displayName) {
   }
 }
 
+// Returns true if the placeholder was generated from a known gender — i.e. a
+// proper race/gender combo. Anything else (Stranger, Unknown Figure, etc.) is
+// treated as a fallback that should be reassigned when possible.
+function isFallbackPlaceholder(placeholder) {
+  const KNOWN_GENDERS = ["Male", "Female", "Non-binary", "Unknown"];
+  return !KNOWN_GENDERS.some(g => placeholder.startsWith(g));
+}
+
 // ── Context menu ─────────────────────────────────────────────────────────────
 
 OBR.onReady(async () => {
@@ -179,6 +187,8 @@ OBR.onReady(async () => {
             { key: "layer", value: "CHARACTER" },
             { key: ["metadata", META_KEY, "hidden"], value: true },
           ],
+          // Note: OBR filters can't do string matching, so we show this option
+          // on all hidden tokens and check isFallbackPlaceholder in onClick.
         },
       },
       {
@@ -243,7 +253,7 @@ OBR.onReady(async () => {
         // The context menu "Reassign placeholder" reuses the same onClick but
         // we distinguish it: meta exists AND meta.hidden is true AND we
         // explicitly re-derive the placeholder.
-        if (meta && meta.placeholder && meta.placeholder.startsWith("Stranger")) {
+        if (meta && meta.placeholder && isFallbackPlaceholder(meta.placeholder)) {
           const entry = findCharacter(table, meta.realName);
           if (entry) {
             const newPlaceholder = await generatePlaceholder(entry.gender, entry.race);
