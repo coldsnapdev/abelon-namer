@@ -123,6 +123,27 @@ async function generatePlaceholder(gender, race) {
   return `${prefix} ${count + 1}`;
 }
 
+// Apply a display name to all the places OBR and Forge show it
+function applyDisplayName(it, displayName) {
+  // Internal name (read by Clash, Forge, etc.)
+  it.name = displayName;
+  // Map label (what players see on the canvas)
+  if (it.text !== undefined) {
+    it.text = {
+      ...it.text,
+      plainText: displayName,
+      richText: [{ type: "paragraph", children: [{ text: displayName }] }],
+    };
+  }
+  // Forge stat block name
+  if (it.metadata[FORGE_NAME_KEY] !== undefined) {
+    it.metadata = {
+      ...it.metadata,
+      [FORGE_NAME_KEY]: displayName,
+    };
+  }
+}
+
 // ── Context menu ─────────────────────────────────────────────────────────────
 
 OBR.onReady(async () => {
@@ -179,10 +200,8 @@ OBR.onReady(async () => {
             placeholder = await generatePlaceholder("Unknown", "Figure");
           }
 
-          // Pass the item object directly (SDK 3.x), not just the ID
           await OBR.scene.items.updateItems([item], (items) => {
             for (const it of items) {
-              it.name = placeholder;
               it.metadata = {
                 ...it.metadata,
                 [META_KEY]: {
@@ -190,10 +209,8 @@ OBR.onReady(async () => {
                   placeholder: placeholder,
                   hidden: true,
                 },
-                ...(it.metadata[FORGE_NAME_KEY] !== undefined && {
-                  [FORGE_NAME_KEY]: placeholder,
-                }),
               };
+              applyDisplayName(it, placeholder);
             }
           });
 
@@ -208,13 +225,11 @@ OBR.onReady(async () => {
         const nowHidden = meta.hidden;
         const displayName = nowHidden ? meta.realName : meta.placeholder;
 
-        // Pass the item object directly (SDK 3.x), not just the ID
         await OBR.scene.items.updateItems([item], (items) => {
           for (const it of items) {
             const d = it.metadata[META_KEY];
             if (!d) return;
 
-            it.name = displayName;
             it.metadata = {
               ...it.metadata,
               [META_KEY]: {
@@ -222,10 +237,8 @@ OBR.onReady(async () => {
                 placeholder: d.placeholder,
                 hidden: !nowHidden,
               },
-              ...(it.metadata[FORGE_NAME_KEY] !== undefined && {
-                [FORGE_NAME_KEY]: displayName,
-              }),
             };
+            applyDisplayName(it, displayName);
           }
         });
       }
