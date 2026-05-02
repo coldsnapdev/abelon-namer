@@ -3,13 +3,13 @@
   "author": "Abelon Campaign",
   "name": "Abelon Namer",
   "description": "Toggle NPC tokens between real name and placeholder. Manage the character table from settings.",
-  "version": "1.0.6",
-  "icon": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/icon.svg",
-  "background_url": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/background.html",
+  "version": "1.0.7",
+  "icon": "https://coldsnapdev.github.io/abelon-namer/icon.svg",
+  "background_url": "https://coldsnapdev.github.io/abelon-namer/background.html",
   "action": {
     "title": "Abelon Namer — Settings",
-    "icon": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/icon.svg",
-    "popover": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/settings.html",
+    "icon": "https://coldsnapdev.github.io/abelon-namer/icon.svg",
+    "popover": "https://coldsnapdev.github.io/abelon-namer/settings.html",
     "height": 600,
     "width": 480
   }
