@@ -258,6 +258,7 @@
 </div>
 
 <div class="action-bar">
+  <button onclick="setupAll()">Set up all tokens</button>
   <button class="success" onclick="anonymiseAll()">Anonymise all</button>
   <button onclick="revealAll()">Reveal all</button>
 </div>
@@ -582,6 +583,78 @@ window.reassignStrangers = async function() {
     }
   } catch (e) {
     setStatus("Error: " + e.message, "err");
+  }
+};
+
+window.setupAll = async function() {
+  try {
+    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
+    const unconfigured = items.filter(i => !i.metadata[META_KEY]);
+    if (unconfigured.length === 0) {
+      setStatus("All tokens are already set up.", "");
+      return;
+    }
+
+    // Build placeholders for all tokens first, tracking counts per prefix
+    // so numbering is correct across the batch
+    const prefixCounts = {};
+    const allItems = await OBR.scene.items.getItems(i => i.layer === "CHARACTER");
+
+    // Seed counts from already-configured tokens
+    for (const item of allItems) {
+      const meta = item.metadata[META_KEY];
+      if (meta && meta.placeholder) {
+        const parts = meta.placeholder.match(/^(.+) \d+$/);
+        if (parts) {
+          const prefix = parts[1];
+          prefixCounts[prefix] = (prefixCounts[prefix] || 0) + 1;
+        }
+      }
+    }
+
+    // Assign placeholders to each unconfigured token
+    const assignments = [];
+    for (const item of unconfigured) {
+      const realName = item.name ? item.name.trim() : "";
+      const entry = characters.find(
+        c => c.name.toLowerCase().trim() === realName.toLowerCase().trim()
+      );
+      let prefix;
+      if (entry) {
+        prefix = `${entry.gender} ${entry.race}`;
+      } else {
+        prefix = "Stranger";
+      }
+      prefixCounts[prefix] = (prefixCounts[prefix] || 0) + 1;
+      const placeholder = `${prefix} ${prefixCounts[prefix]}`;
+      assignments.push({ item, realName, placeholder });
+    }
+
+    // Apply all in one batch
+    await OBR.scene.items.updateItems(unconfigured, (items) => {
+      for (const it of items) {
+        const assignment = assignments.find(a => a.item.id === it.id);
+        if (!assignment) continue;
+        const { realName, placeholder } = assignment;
+        it.name = placeholder;
+        it.text = {
+          ...(it.text || {}),
+          plainText: placeholder,
+          richText: [{ type: "paragraph", children: [{ text: placeholder }] }],
+        };
+        it.metadata = {
+          ...it.metadata,
+          [META_KEY]: { realName, placeholder, hidden: true },
+          ...(it.metadata["com.battle-system.forge/name"] !== undefined && {
+            "com.battle-system.forge/name": placeholder,
+          }),
+        };
+      }
+    });
+
+    setStatus(`Set up and anonymised ${assignments.length} token(s).`, "ok");
+  } catch (e) {
+    setStatus("Error: " + (e.message || JSON.stringify(e)), "err");
   }
 };
 
