@@ -128,13 +128,13 @@ function applyDisplayName(it, displayName) {
   // Internal name (read by Clash, Forge, etc.)
   it.name = displayName;
   // Map label (what players see on the canvas)
-  if (it.text !== undefined) {
-    it.text = {
-      ...it.text,
-      plainText: displayName,
-      richText: [{ type: "paragraph", children: [{ text: displayName }] }],
-    };
-  }
+  // Always write text even if the token didn't have a label before,
+  // otherwise the visible name on the map never updates on first setup.
+  it.text = {
+    ...(it.text || {}),
+    plainText: displayName,
+    richText: [{ type: "paragraph", children: [{ text: displayName }] }],
+  };
   // Forge stat block name
   if (it.metadata[FORGE_NAME_KEY] !== undefined) {
     it.metadata = {
