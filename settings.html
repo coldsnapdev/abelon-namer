@@ -453,7 +453,7 @@ window.resetToDefaults = function() {
 };
 
 window.clearAllTokenData = async function() {
-  if (!confirm("This will remove all name toggle data from every token in the current scene. Token names will revert to whatever they currently display. Continue?")) return;
+  if (!confirm("This will restore all token names to their real names and remove toggle data from the current scene. Continue?")) return;
   try {
     const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
     const withData = items.filter(i => i.metadata[META_KEY]);
@@ -461,12 +461,25 @@ window.clearAllTokenData = async function() {
       setStatus("No tokens have name data set.", "");
       return;
     }
-    await OBR.scene.items.updateItems(withData.map(i => i.id), (items) => {
-      for (const item of items) {
-        delete item.metadata[META_KEY];
+    await OBR.scene.items.updateItems(withData, (items) => {
+      for (const it of items) {
+        const meta = it.metadata[META_KEY];
+        if (!meta) continue;
+        const realName = meta.realName || it.name;
+        // Restore the real name everywhere before clearing metadata
+        it.name = realName;
+        it.text = {
+          ...(it.text || {}),
+          plainText: realName,
+          richText: [{ type: "paragraph", children: [{ text: realName }] }],
+        };
+        // Remove the toggle metadata
+        const newMeta = { ...it.metadata };
+        delete newMeta[META_KEY];
+        it.metadata = newMeta;
       }
     });
-    setStatus(`Cleared name data from ${withData.length} token(s).`, "ok");
+    setStatus(`Restored and cleared ${withData.length} token(s).`, "ok");
   } catch (e) {
     setStatus("Error: " + e.message, "err");
   }
