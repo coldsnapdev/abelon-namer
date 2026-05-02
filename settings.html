@@ -595,29 +595,26 @@ window.anonymiseAll = async function() {
       setStatus("No revealed tokens to anonymise.", "");
       return;
     }
-    for (const item of configured) {
-      const meta = item.metadata[META_KEY];
-      const placeholder = meta.placeholder;
-      await OBR.scene.items.updateItems([item], (items) => {
-        for (const it of items) {
-          const d = it.metadata[META_KEY];
-          if (!d) return;
-          it.name = placeholder;
-          it.text = {
-            ...(it.text || {}),
-            plainText: placeholder,
-            richText: [{ type: "paragraph", children: [{ text: placeholder }] }],
-          };
-          it.metadata = {
-            ...it.metadata,
-            [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: true },
-          };
-        }
-      });
-    }
+    // Single updateItems call across all tokens — avoids stale reference errors
+    await OBR.scene.items.updateItems(configured, (items) => {
+      for (const it of items) {
+        const d = it.metadata[META_KEY];
+        if (!d) continue;
+        it.name = d.placeholder;
+        it.text = {
+          ...(it.text || {}),
+          plainText: d.placeholder,
+          richText: [{ type: "paragraph", children: [{ text: d.placeholder }] }],
+        };
+        it.metadata = {
+          ...it.metadata,
+          [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: true },
+        };
+      }
+    });
     setStatus(`Anonymised ${configured.length} token(s).`, "ok");
   } catch (e) {
-    setStatus("Error: " + e.message, "err");
+    setStatus("Error: " + (e.message || JSON.stringify(e)), "err");
   }
 };
 
@@ -632,29 +629,26 @@ window.revealAll = async function() {
       setStatus("No hidden tokens to reveal.", "");
       return;
     }
-    for (const item of configured) {
-      const meta = item.metadata[META_KEY];
-      const realName = meta.realName;
-      await OBR.scene.items.updateItems([item], (items) => {
-        for (const it of items) {
-          const d = it.metadata[META_KEY];
-          if (!d) return;
-          it.name = realName;
-          it.text = {
-            ...(it.text || {}),
-            plainText: realName,
-            richText: [{ type: "paragraph", children: [{ text: realName }] }],
-          };
-          it.metadata = {
-            ...it.metadata,
-            [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: false },
-          };
-        }
-      });
-    }
+    // Single updateItems call across all tokens — avoids stale reference errors
+    await OBR.scene.items.updateItems(configured, (items) => {
+      for (const it of items) {
+        const d = it.metadata[META_KEY];
+        if (!d) continue;
+        it.name = d.realName;
+        it.text = {
+          ...(it.text || {}),
+          plainText: d.realName,
+          richText: [{ type: "paragraph", children: [{ text: d.realName }] }],
+        };
+        it.metadata = {
+          ...it.metadata,
+          [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: false },
+        };
+      }
+    });
     setStatus(`Revealed ${configured.length} token(s).`, "ok");
   } catch (e) {
-    setStatus("Error: " + e.message, "err");
+    setStatus("Error: " + (e.message || JSON.stringify(e)), "err");
   }
 };
 
