@@ -191,6 +191,21 @@
 
   .add-row input[type="text"] { flex: 1; min-width: 100px; }
   .add-row select { flex-shrink: 0; width: auto; }
+
+  .action-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg2);
+    border-top: 1px solid var(--rule);
+    flex-shrink: 0;
+  }
+
+  .action-bar button {
+    flex: 1;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -239,6 +254,11 @@
     </thead>
     <tbody id="char-table-body"></tbody>
   </table>
+</div>
+
+<div class="action-bar">
+  <button class="success" onclick="anonymiseAll()">Anonymise all</button>
+  <button onclick="revealAll()">Reveal all</button>
 </div>
 
 <div class="footer">
@@ -559,6 +579,80 @@ window.reassignStrangers = async function() {
     } else {
       setStatus(`Reassigned ${reassigned} token(s). ${strangers.length - reassigned > 0 ? `${strangers.length - reassigned} still not in table.` : ""}`, "ok");
     }
+  } catch (e) {
+    setStatus("Error: " + e.message, "err");
+  }
+};
+
+window.anonymiseAll = async function() {
+  try {
+    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
+    const configured = items.filter(i => {
+      const meta = i.metadata[META_KEY];
+      return meta && meta.hidden === false;
+    });
+    if (configured.length === 0) {
+      setStatus("No revealed tokens to anonymise.", "");
+      return;
+    }
+    for (const item of configured) {
+      const meta = item.metadata[META_KEY];
+      const placeholder = meta.placeholder;
+      await OBR.scene.items.updateItems([item], (items) => {
+        for (const it of items) {
+          const d = it.metadata[META_KEY];
+          if (!d) return;
+          it.name = placeholder;
+          it.text = {
+            ...(it.text || {}),
+            plainText: placeholder,
+            richText: [{ type: "paragraph", children: [{ text: placeholder }] }],
+          };
+          it.metadata = {
+            ...it.metadata,
+            [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: true },
+          };
+        }
+      });
+    }
+    setStatus(`Anonymised ${configured.length} token(s).`, "ok");
+  } catch (e) {
+    setStatus("Error: " + e.message, "err");
+  }
+};
+
+window.revealAll = async function() {
+  try {
+    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
+    const configured = items.filter(i => {
+      const meta = i.metadata[META_KEY];
+      return meta && meta.hidden === true;
+    });
+    if (configured.length === 0) {
+      setStatus("No hidden tokens to reveal.", "");
+      return;
+    }
+    for (const item of configured) {
+      const meta = item.metadata[META_KEY];
+      const realName = meta.realName;
+      await OBR.scene.items.updateItems([item], (items) => {
+        for (const it of items) {
+          const d = it.metadata[META_KEY];
+          if (!d) return;
+          it.name = realName;
+          it.text = {
+            ...(it.text || {}),
+            plainText: realName,
+            richText: [{ type: "paragraph", children: [{ text: realName }] }],
+          };
+          it.metadata = {
+            ...it.metadata,
+            [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: false },
+          };
+        }
+      });
+    }
+    setStatus(`Revealed ${configured.length} token(s).`, "ok");
   } catch (e) {
     setStatus("Error: " + e.message, "err");
   }
