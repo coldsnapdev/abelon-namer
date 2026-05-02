@@ -20,6 +20,8 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html, body { overflow-x: hidden; }
+
   body {
     background: var(--bg);
     color: var(--ink);
@@ -154,13 +156,14 @@
     border-top: 1px solid var(--rule);
     background: var(--bg2);
     display: flex;
-    gap: 8px;
-    align-items: center;
+    gap: 6px;
+    align-items: flex-start;
     flex-shrink: 0;
+    flex-wrap: wrap;
   }
 
   .status {
-    flex: 1;
+    flex: 1 1 100%;
     font-size: 11px;
     color: var(--ink3);
     font-style: italic;
@@ -487,6 +490,13 @@ window.clearAllTokenData = async function() {
 
 window.reassignStrangers = async function() {
   try {
+    // Ensure we're working with the most current character list from the room
+    // in case the UI hasn't been refreshed
+    let activeCharacters = characters;
+    if (activeCharacters.length === 0) {
+      const roomMeta = await OBR.room.getMetadata();
+      activeCharacters = roomMeta[`${EXT_ID}/characters`] || [];
+    }
     const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
     const KNOWN_GENDERS = ["Male", "Female", "Non-binary", "Unknown"];
     const strangers = items.filter(i => {
@@ -503,8 +513,9 @@ window.reassignStrangers = async function() {
     let reassigned = 0;
     for (const item of strangers) {
       const meta = item.metadata[`${EXT_ID}/data`];
-      const entry = characters.find(
-        c => c.name.toLowerCase().trim() === meta.realName.toLowerCase().trim()
+      const targetName = meta.realName.toLowerCase().trim();
+      const entry = activeCharacters.find(
+        c => c.name.toLowerCase().trim() === targetName
       );
       if (!entry) continue;
 
@@ -543,7 +554,8 @@ window.reassignStrangers = async function() {
       reassigned++;
     }
     if (reassigned === 0) {
-      setStatus("Found Strangers but none matched characters in the current table. Have you saved the table?", "err");
+      const names = strangers.map(i => i.metadata[`${EXT_ID}/data`]?.realName || "?").join(", ");
+      setStatus(`No matches found. Token real names: ${names}. Check spelling in table and Save to Room.`, "err");
     } else {
       setStatus(`Reassigned ${reassigned} token(s). ${strangers.length - reassigned > 0 ? `${strangers.length - reassigned} still not in table.` : ""}`, "ok");
     }
