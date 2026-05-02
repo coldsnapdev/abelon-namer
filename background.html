@@ -112,7 +112,7 @@ function findCharacter(table, realName) {
 }
 
 async function generatePlaceholder(gender, race) {
-  const prefix = `${gender} ${race}`;
+  const prefix = race ? `${gender} ${race}` : gender;
   const allItems = await OBR.scene.items.getItems(
     item => item.layer === "CHARACTER"
   );
@@ -173,6 +173,16 @@ OBR.onReady(async () => {
       },
       {
         icon: "/figure.svg",
+        label: "Reassign placeholder",
+        filter: {
+          every: [
+            { key: "layer", value: "CHARACTER" },
+            { key: ["metadata", META_KEY, "hidden"], value: true },
+          ],
+        },
+      },
+      {
+        icon: "/figure.svg",
         label: "Set up name toggle",
         filter: {
           every: [
@@ -197,7 +207,7 @@ OBR.onReady(async () => {
           if (entry) {
             placeholder = await generatePlaceholder(entry.gender, entry.race);
           } else {
-            placeholder = await generatePlaceholder("Unknown", "Figure");
+            placeholder = await generatePlaceholder("Stranger", "");
           }
 
           await OBR.scene.items.updateItems([item], (items) => {
@@ -219,6 +229,49 @@ OBR.onReady(async () => {
             "INFO"
           );
           return;
+        }
+
+        // ── Reassign placeholder ─────────────────────────────────────────────
+        // Re-runs table lookup and generates a fresh placeholder.
+        // Fires when token is hidden and user picks "Reassign placeholder".
+        // We detect this by checking if the label shown is "Reassign" — but
+        // since OBR fires onClick for whichever icon matched, we infer intent
+        // from whether the realName now exists in the table with a race/gender
+        // that differs from the stored placeholder prefix.
+        // Simpler approach: expose via a separate exported function called from
+        // settings panel bulk reassign, and keep onClick purely for toggle.
+        // The context menu "Reassign placeholder" reuses the same onClick but
+        // we distinguish it: meta exists AND meta.hidden is true AND we
+        // explicitly re-derive the placeholder.
+        if (meta && meta.placeholder && meta.placeholder.startsWith("Stranger")) {
+          const entry = findCharacter(table, meta.realName);
+          if (entry) {
+            const newPlaceholder = await generatePlaceholder(entry.gender, entry.race);
+            const currentlyHidden = meta.hidden;
+            await OBR.scene.items.updateItems([item], (items) => {
+              for (const it of items) {
+                const d = it.metadata[META_KEY];
+                if (!d) return;
+                it.metadata = {
+                  ...it.metadata,
+                  [META_KEY]: {
+                    realName: d.realName,
+                    placeholder: newPlaceholder,
+                    hidden: currentlyHidden,
+                  },
+                };
+                // If currently hidden, update the visible name to the new placeholder
+                if (currentlyHidden) {
+                  applyDisplayName(it, newPlaceholder);
+                }
+              }
+            });
+            await OBR.notification.show(
+              `Placeholder updated to "${newPlaceholder}".`,
+              "INFO"
+            );
+            continue;
+          }
         }
 
         // ── Toggle existing token ────────────────────────────────────────────

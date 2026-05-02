@@ -240,6 +240,7 @@
 
 <div class="footer">
   <span class="status" id="status">Loading…</span>
+  <button class="primary" onclick="reassignStrangers()">Reassign Strangers in scene</button>
   <button class="danger" onclick="clearAllTokenData()">Clear all token name data from scene</button>
 </div>
 
@@ -466,6 +467,69 @@ window.clearAllTokenData = async function() {
       }
     });
     setStatus(`Cleared name data from ${withData.length} token(s).`, "ok");
+  } catch (e) {
+    setStatus("Error: " + e.message, "err");
+  }
+};
+
+window.reassignStrangers = async function() {
+  try {
+    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
+    const strangers = items.filter(i => {
+      const meta = i.metadata[`${EXT_ID}/data`];
+      return meta && meta.placeholder && meta.placeholder.startsWith("Stranger");
+    });
+    if (strangers.length === 0) {
+      setStatus("No Stranger placeholders found in scene.", "");
+      return;
+    }
+    let reassigned = 0;
+    for (const item of strangers) {
+      const meta = item.metadata[`${EXT_ID}/data`];
+      const entry = characters.find(
+        c => c.name.toLowerCase().trim() === meta.realName.toLowerCase().trim()
+      );
+      if (!entry) continue;
+
+      // Generate a new placeholder based on their race/gender
+      const prefix = `${entry.gender} ${entry.race}`;
+      const allItems = await OBR.scene.items.getItems(i => i.layer === "CHARACTER");
+      const count = allItems.filter(i => {
+        const m = i.metadata[`${EXT_ID}/data`];
+        return m && m.placeholder && m.placeholder.startsWith(prefix);
+      }).length;
+      const newPlaceholder = `${prefix} ${count + 1}`;
+      const currentlyHidden = meta.hidden;
+
+      await OBR.scene.items.updateItems([item], (items) => {
+        for (const it of items) {
+          const d = it.metadata[`${EXT_ID}/data`];
+          if (!d) return;
+          it.metadata = {
+            ...it.metadata,
+            [`${EXT_ID}/data`]: {
+              realName: d.realName,
+              placeholder: newPlaceholder,
+              hidden: currentlyHidden,
+            },
+          };
+          if (currentlyHidden) {
+            it.name = newPlaceholder;
+            it.text = {
+              ...(it.text || {}),
+              plainText: newPlaceholder,
+              richText: [{ type: "paragraph", children: [{ text: newPlaceholder }] }],
+            };
+          }
+        }
+      });
+      reassigned++;
+    }
+    if (reassigned === 0) {
+      setStatus("Found Strangers but none matched characters in the current table. Have you saved the table?", "err");
+    } else {
+      setStatus(`Reassigned ${reassigned} token(s). ${strangers.length - reassigned > 0 ? `${strangers.length - reassigned} still not in table.` : ""}`, "ok");
+    }
   } catch (e) {
     setStatus("Error: " + e.message, "err");
   }
