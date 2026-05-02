@@ -309,6 +309,76 @@ OBR.onReady(async () => {
   });
 
 });
+
+// ── Reset context menu ────────────────────────────────────────────────────────
+// Separate menu so it can have its own filter independent of the toggle menu.
+
+OBR.onReady(async () => {
+
+  OBR.contextMenu.create({
+    id: `${EXT_ID}/reset-menu`,
+    icons: [
+      {
+        icon: "/figure.svg",
+        label: "Reset token (restore real name)",
+        filter: {
+          every: [
+            { key: "layer", value: "CHARACTER" },
+            { key: ["metadata", META_KEY, "hidden"], value: false },
+          ],
+        },
+      },
+      {
+        icon: "/figure.svg",
+        label: "Reset token (restore real name)",
+        filter: {
+          every: [
+            { key: "layer", value: "CHARACTER" },
+            { key: ["metadata", META_KEY, "hidden"], value: true },
+          ],
+        },
+      },
+    ],
+
+    async onClick(context) {
+      for (const item of context.items) {
+        const meta = item.metadata[META_KEY];
+        if (!meta) continue;
+
+        const realName = meta.realName || item.name;
+
+        await OBR.scene.items.updateItems([item], (items) => {
+          for (const it of items) {
+            // Restore real name on map and internally
+            it.name = realName;
+            it.text = {
+              ...(it.text || {}),
+              plainText: realName,
+              richText: [{ type: "paragraph", children: [{ text: realName }] }],
+            };
+            // Restore Forge name if present
+            if (it.metadata[FORGE_NAME_KEY] !== undefined) {
+              it.metadata = {
+                ...it.metadata,
+                [FORGE_NAME_KEY]: realName,
+              };
+            }
+            // Remove toggle metadata
+            const newMeta = { ...it.metadata };
+            delete newMeta[META_KEY];
+            it.metadata = newMeta;
+          }
+        });
+
+        await OBR.notification.show(
+          `"${realName}" reset. Ready to set up again.`,
+          "INFO"
+        );
+      }
+    },
+  });
+
+});
 </script>
 </body>
 </html>
