@@ -156,11 +156,18 @@ function isFallbackPlaceholder(placeholder) {
 
 OBR.onReady(async () => {
 
+  // Hide the action icon entirely for non-GM players
+  const role = await OBR.player.getRole();
+  if (role !== "GM") {
+    await OBR.action.hide();
+    return;
+  }
+
   OBR.contextMenu.create({
     id: `${EXT_ID}/context-menu`,
     icons: [
       {
-        icon: "/figure.svg",
+        icon: "/context-icon.svg",
         label: "Hide Name (show placeholder)",
         filter: {
           every: [
@@ -170,7 +177,7 @@ OBR.onReady(async () => {
         },
       },
       {
-        icon: "/figure.svg",
+        icon: "/context-icon.svg",
         label: "Reveal Real Name",
         filter: {
           every: [
@@ -180,7 +187,7 @@ OBR.onReady(async () => {
         },
       },
       {
-        icon: "/figure.svg",
+        icon: "/context-icon.svg",
         label: "Reassign placeholder",
         filter: {
           every: [
@@ -192,7 +199,7 @@ OBR.onReady(async () => {
         },
       },
       {
-        icon: "/figure.svg",
+        icon: "/context-icon.svg",
         label: "Set up name toggle",
         filter: {
           every: [
@@ -203,6 +210,9 @@ OBR.onReady(async () => {
     ],
 
     async onClick(context) {
+      const role = await OBR.player.getRole();
+      if (role !== "GM") return;
+
       const table = await getCharacterTable();
 
       for (const item of context.items) {
@@ -315,11 +325,18 @@ OBR.onReady(async () => {
 
 OBR.onReady(async () => {
 
+  // Hide the action icon entirely for non-GM players
+  const role = await OBR.player.getRole();
+  if (role !== "GM") {
+    await OBR.action.hide();
+    return;
+  }
+
   OBR.contextMenu.create({
     id: `${EXT_ID}/reset-menu`,
     icons: [
       {
-        icon: "/figure.svg",
+        icon: "/context-icon.svg",
         label: "Reset token (restore real name)",
         filter: {
           every: [
@@ -329,7 +346,7 @@ OBR.onReady(async () => {
         },
       },
       {
-        icon: "/figure.svg",
+        icon: "/context-icon.svg",
         label: "Reset token (restore real name)",
         filter: {
           every: [
@@ -341,6 +358,9 @@ OBR.onReady(async () => {
     ],
 
     async onClick(context) {
+      const role = await OBR.player.getRole();
+      if (role !== "GM") return;
+
       for (const item of context.items) {
         const meta = item.metadata[META_KEY];
         if (!meta) continue;
