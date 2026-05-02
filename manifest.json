@@ -3,11 +3,9 @@
   "author": "Abelon Campaign",
   "name": "Abelon Namer",
   "description": "Toggle NPC tokens between real name and placeholder. Manage the character table from settings.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "icon": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/icon.svg",
-  "background": {
-    "url": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/background.html"
-  },
+  "background_url": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/background.html",
   "action": {
     "title": "Abelon Namer — Settings",
     "icon": "https://cdn.jsdelivr.net/gh/coldsnapdev/abelon-namer@main/icon.svg",
