@@ -179,8 +179,10 @@ OBR.onReady(async () => {
             placeholder = await generatePlaceholder("Unknown", "Figure");
           }
 
-          await OBR.scene.items.updateItems([item.id], (items) => {
+          // Pass the item object directly (SDK 3.x), not just the ID
+          await OBR.scene.items.updateItems([item], (items) => {
             for (const it of items) {
+              it.name = placeholder;
               it.metadata = {
                 ...it.metadata,
                 [META_KEY]: {
@@ -188,11 +190,10 @@ OBR.onReady(async () => {
                   placeholder: placeholder,
                   hidden: true,
                 },
-                [FORGE_NAME_KEY]: it.metadata[FORGE_NAME_KEY] !== undefined
-                  ? placeholder
-                  : it.metadata[FORGE_NAME_KEY],
+                ...(it.metadata[FORGE_NAME_KEY] !== undefined && {
+                  [FORGE_NAME_KEY]: placeholder,
+                }),
               };
-              it.name = placeholder;
             }
           });
 
@@ -207,11 +208,13 @@ OBR.onReady(async () => {
         const nowHidden = meta.hidden;
         const displayName = nowHidden ? meta.realName : meta.placeholder;
 
-        await OBR.scene.items.updateItems([item.id], (items) => {
+        // Pass the item object directly (SDK 3.x), not just the ID
+        await OBR.scene.items.updateItems([item], (items) => {
           for (const it of items) {
             const d = it.metadata[META_KEY];
             if (!d) return;
 
+            it.name = displayName;
             it.metadata = {
               ...it.metadata,
               [META_KEY]: {
@@ -219,11 +222,10 @@ OBR.onReady(async () => {
                 placeholder: d.placeholder,
                 hidden: !nowHidden,
               },
-              [FORGE_NAME_KEY]: it.metadata[FORGE_NAME_KEY] !== undefined
-                ? displayName
-                : it.metadata[FORGE_NAME_KEY],
+              ...(it.metadata[FORGE_NAME_KEY] !== undefined && {
+                [FORGE_NAME_KEY]: displayName,
+              }),
             };
-            it.name = displayName;
           }
         });
       }
