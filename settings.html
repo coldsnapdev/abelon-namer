@@ -21,6 +21,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body { overflow-x: hidden; }
+  body { visibility: hidden; }
 
   body {
     background: var(--bg);
@@ -660,6 +661,16 @@ document.getElementById("search").addEventListener("input", (e) => {
 // ── Init ─────────────────────────────────────────────────────────────────────
 OBR.onReady(async () => {
   try {
+    // Hard gate — players see nothing
+    const role = await OBR.player.getRole();
+    if (role !== "GM") {
+      // Body stays hidden and blank — player sees nothing
+      document.body.innerHTML = "";
+      return;
+    }
+    // GM confirmed — reveal the UI
+    document.body.style.visibility = "visible";
+
     const roomMeta = await OBR.room.getMetadata();
     if (roomMeta[`${EXT_ID}/characters`]) {
       characters = roomMeta[`${EXT_ID}/characters`];
