@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abelon Namer — Settings</title>
+<style>
+  :root {
+    --bg: #1a1410;
+    --bg2: #241f16;
+    --bg3: #2a2318;
+    --ink: #e8d9bc;
+    --ink2: #c4a882;
+    --ink3: #8a7a65;
+    --accent: #c4a882;
+    --rule: #5a4a38;
+    --red: #F0997B;
+    --teal: #5DCAA5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: .05em;
+  }
+
+  header p {
+    font-size: 11px;
+    color: var(--ink3);
+    margin-top: 2px;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--rule);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  input[type="text"] {
+    background: var(--bg3);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  input[type="text"]:focus { outline: none; border-color: var(--accent); }
+
+  button {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    cursor: pointer;
+    background: var(--bg3);
+    color: var(--ink2);
+    transition: background .15s;
+    white-space: nowrap;
+  }
+
+  button:hover { background: var(--rule); }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  button.primary:hover { background: rgba(196,168,130,0.15); }
+  button.danger { border-color: var(--red); color: var(--red); }
+  button.danger:hover { background: rgba(240,153,123,0.15); }
+  button.success { border-color: var(--teal); color: var(--teal); }
+  button.success:hover { background: rgba(93,202,165,0.15); }
+
+  .table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 16px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    border-bottom: 1px solid var(--rule);
+    padding: 6px 4px;
+    text-align: left;
+  }
+
+  tbody tr:hover td { background: rgba(196,168,130,0.05); }
+
+  tbody td {
+    padding: 5px 4px;
+    border-bottom: 1px solid rgba(90,74,56,0.3);
+    vertical-align: middle;
+  }
+
+  td input[type="text"] { width: 100%; }
+
+  select {
+    background: var(--bg3);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    width: 100%;
+  }
+
+  select:focus { outline: none; border-color: var(--accent); }
+
+  .del-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .del-btn:hover { color: var(--red); background: rgba(240,153,123,0.1); }
+
+  .footer {
+    padding: 8px 16px;
+    border-top: 1px solid var(--rule);
+    background: var(--bg2);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .status {
+    flex: 1;
+    font-size: 11px;
+    color: var(--ink3);
+    font-style: italic;
+  }
+
+  .status.ok { color: var(--teal); }
+  .status.err { color: var(--red); }
+
+  .add-row {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--rule);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .add-row label {
+    font-size: 11px;
+    color: var(--ink3);
+    white-space: nowrap;
+  }
+
+  .add-row input[type="text"] { flex: 1; min-width: 100px; }
+  .add-row select { flex-shrink: 0; width: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Abelon Namer — Character Table</h1>
+  <p>Each character's real name, gender, and race. Used to generate placeholder names on the map.</p>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="Search characters…">
+  <button class="primary" onclick="saveTable()">Save to Room</button>
+  <button onclick="resetToDefaults()">Reset to Defaults</button>
+</div>
+
+<div class="add-row">
+  <label>Add:</label>
+  <input type="text" id="new-name" placeholder="Real name">
+  <select id="new-gender">
+    <option>Male</option>
+    <option>Female</option>
+    <option>Non-binary</option>
+    <option>Unknown</option>
+  </select>
+  <select id="new-race">
+    <option>Human</option>
+    <option>Dwarf</option>
+    <option>Elf</option>
+    <option>Gnome</option>
+    <option>Halfling</option>
+    <option>Orc</option>
+    <option>Other</option>
+  </select>
+  <button class="success" onclick="addCharacter()">+ Add</button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%">Real Name</th>
+        <th style="width:25%">Gender</th>
+        <th style="width:25%">Race</th>
+        <th style="width:10%"></th>
+      </tr>
+    </thead>
+    <tbody id="char-table-body"></tbody>
+  </table>
+</div>
+
+<div class="footer">
+  <span class="status" id="status">Loading…</span>
+  <button onclick="clearAllTokenData()">Clear all token name data from scene</button>
+</div>
+
+<script type="module">
+import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@1.11.0/+esm";
+
+const EXT_ID = "com.abelon.namer";
+const META_KEY = `${EXT_ID}/data`;
+const FORGE_NAME_KEY = "com.battle-system.forge/name";
+
+const GENDERS = ["Male", "Female", "Non-binary", "Unknown"];
+const RACES   = ["Human", "Dwarf", "Elf", "Gnome", "Halfling", "Orc", "Other"];
+
+let characters = [];
+
+window.setStatus = function(msg, type = "") {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status " + type;
+};
+
+function renderTable(filter = "") {
+  const tbody = document.getElementById("char-table-body");
+  tbody.innerHTML = "";
+  const lower = filter.toLowerCase();
+  const filtered = filter
+    ? characters.filter(c => c.name.toLowerCase().includes(lower))
+    : characters;
+
+  filtered.forEach((char, idx) => {
+    // Find real index in characters array
+    const realIdx = characters.indexOf(char);
+    const tr = document.createElement("tr");
+
+    // Name cell
+    const tdName = document.createElement("td");
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = char.name;
+    nameInput.addEventListener("change", () => {
+      characters[realIdx].name = nameInput.value.trim();
+    });
+    tdName.appendChild(nameInput);
+    tr.appendChild(tdName);
+
+    // Gender cell
+    const tdGender = document.createElement("td");
+    const genderSel = document.createElement("select");
+    GENDERS.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      if (g === char.gender) opt.selected = true;
+      genderSel.appendChild(opt);
+    });
+    genderSel.addEventListener("change", () => {
+      characters[realIdx].gender = genderSel.value;
+    });
+    tdGender.appendChild(genderSel);
+    tr.appendChild(tdGender);
+
+    // Race cell
+    const tdRace = document.createElement("td");
+    const raceSel = document.createElement("select");
+    RACES.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r;
+      opt.textContent = r;
+      if (r === char.race) opt.selected = true;
+      raceSel.appendChild(opt);
+    });
+    raceSel.addEventListener("change", () => {
+      characters[realIdx].race = raceSel.value;
+    });
+    tdRace.appendChild(raceSel);
+    tr.appendChild(tdRace);
+
+    // Delete cell
+    const tdDel = document.createElement("td");
+    const delBtn = document.createElement("button");
+    delBtn.className = "del-btn";
+    delBtn.textContent = "✕";
+    delBtn.title = "Remove character";
+    delBtn.addEventListener("click", () => {
+      characters.splice(realIdx, 1);
+      renderTable(document.getElementById("search").value);
+      setStatus("Removed. Remember to Save to Room.", "");
+    });
+    tdDel.appendChild(delBtn);
+    tr.appendChild(tdDel);
+
+    tbody.appendChild(tr);
+  });
+}
+
+window.addCharacter = function() {
+  const name = document.getElementById("new-name").value.trim();
+  if (!name) {
+    setStatus("Please enter a real name.", "err");
+    return;
+  }
+  const gender = document.getElementById("new-gender").value;
+  const race = document.getElementById("new-race").value;
+  characters.push({ name, gender, race });
+  document.getElementById("new-name").value = "";
+  renderTable(document.getElementById("search").value);
+  setStatus(`Added "${name}". Remember to Save to Room.`, "");
+};
+
+window.saveTable = async function() {
+  try {
+    await OBR.room.setMetadata({
+      [`${EXT_ID}/characters`]: characters,
+    });
+    setStatus(`Saved ${characters.length} characters.`, "ok");
+  } catch (e) {
+    setStatus("Error saving: " + e.message, "err");
+  }
+};
+
+window.resetToDefaults = async function() {
+  if (!confirm("Reset to the built-in default character list? Any custom additions will be lost.")) return;
+  const roomMeta = await OBR.room.getMetadata();
+  // Get defaults from background — we re-declare them here for simplicity
+  const resp = await fetch("/background.html");
+  const text = await resp.text();
+  // Parse DEFAULT_CHARACTERS out of the background script
+  const match = text.match(/const DEFAULT_CHARACTERS = (\[[\s\S]*?\]);/);
+  if (match) {
+    try {
+      characters = JSON.parse(match[1].replace(/\/\/.*$/gm, "").replace(/,(\s*[}\]])/g, "$1"));
+      renderTable();
+      setStatus("Reset to defaults. Remember to Save to Room.", "");
+    } catch {
+      setStatus("Could not parse defaults. Please reload.", "err");
+    }
+  }
+};
+
+window.clearAllTokenData = async function() {
+  if (!confirm("This will remove all name toggle data from every token in the current scene. Token names will revert to whatever they currently display. Continue?")) return;
+  try {
+    const items = await OBR.scene.items.getItems(item => item.layer === "CHARACTER");
+    const withData = items.filter(i => i.metadata[META_KEY]);
+    if (withData.length === 0) {
+      setStatus("No tokens have name data set.", "");
+      return;
+    }
+    await OBR.scene.items.updateItems(withData.map(i => i.id), (items) => {
+      for (const item of items) {
+        delete item.metadata[META_KEY];
+      }
+    });
+    setStatus(`Cleared name data from ${withData.length} token(s).`, "ok");
+  } catch (e) {
+    setStatus("Error: " + e.message, "err");
+  }
+};
+
+// Search filter
+document.getElementById("search").addEventListener("input", (e) => {
+  renderTable(e.target.value);
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+OBR.onReady(async () => {
+  try {
+    const roomMeta = await OBR.room.getMetadata();
+    if (roomMeta[`${EXT_ID}/characters`]) {
+      characters = roomMeta[`${EXT_ID}/characters`];
+      setStatus(`Loaded ${characters.length} characters from room.`, "ok");
+    } else {
+      // Load defaults from background.html
+      const resp = await fetch("/background.html");
+      const text = await resp.text();
+      const match = text.match(/const DEFAULT_CHARACTERS = (\[[\s\S]*?\]);/);
+      if (match) {
+        const cleaned = match[1]
+          .replace(/\/\/[^\n]*/g, "")
+          .replace(/,\s*([}\]])/g, "$1");
+        characters = JSON.parse(cleaned);
+      }
+      setStatus(`Loaded ${characters.length} default characters. Save to Room to persist.`, "");
+    }
+    renderTable();
+  } catch (e) {
+    setStatus("Error loading: " + e.message, "err");
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head><title>Abelon Namer Background</title></head>
+<body>
+<script type="module">
+import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@1.11.0/+esm";
+
+const EXT_ID = "com.abelon.namer";
+const META_KEY = `${EXT_ID}/data`;
+const FORGE_NAME_KEY = "com.battle-system.forge/name";
+
+// ── Default character lookup table ──────────────────────────────────────────
+// Each entry: { name, gender, race }
+// Gender options: Male | Female | Non-binary | Unknown
+// Race options: Human | Dwarf | Elf | Gnome | Halfling | Orc | Other
+
+const DEFAULT_CHARACTERS = [
+  // Road Ambush
+  { name: "Brath",         gender: "Male",       race: "Human"   },
+  { name: "Davan",         gender: "Male",       race: "Human"   },
+  { name: "Idony",         gender: "Female",     race: "Human"   },
+  { name: "Pell",          gender: "Male",       race: "Human"   },
+  // Seva and Sables
+  { name: "Seva Sable",    gender: "Female",     race: "Elf"     },
+  { name: "Mira Sable",    gender: "Female",     race: "Human"   },
+  { name: "Elbeth Sable",  gender: "Female",     race: "Human"   },
+  { name: "Dalla Sable",   gender: "Female",     race: "Human"   },
+  { name: "Perys Sable",   gender: "Non-binary", race: "Human"   },
+  // Merchants faction
+  { name: "Alric Venn",    gender: "Male",       race: "Human"   },
+  { name: "Huw",           gender: "Male",       race: "Human"   },
+  { name: "Bael",          gender: "Male",       race: "Human"   },
+  { name: "Gethin",        gender: "Male",       race: "Human"   },
+  { name: "Wyn",           gender: "Male",       race: "Human"   },
+  { name: "Caron",         gender: "Female",     race: "Human"   },
+  { name: "Aldric",        gender: "Male",       race: "Human"   },
+  { name: "Prys",          gender: "Male",       race: "Human"   },
+  { name: "Nesta",         gender: "Female",     race: "Human"   },
+  { name: "Sioned",        gender: "Female",     race: "Human"   },
+  { name: "Cebb",          gender: "Male",       race: "Human"   },
+  // Trademasters faction
+  { name: "Oskar Sternov", gender: "Male",       race: "Human"   },
+  { name: "Anneth Holdworn", gender: "Female",   race: "Human"   },
+  { name: "Cors Holdworn", gender: "Male",       race: "Human"   },
+  { name: "Drest",         gender: "Male",       race: "Dwarf"   },
+  { name: "Ysolde",        gender: "Female",     race: "Human"   },
+  { name: "Tav",           gender: "Male",       race: "Human"   },
+  { name: "Efa Dun",       gender: "Female",     race: "Human"   },
+  { name: "Roark",         gender: "Male",       race: "Human"   },
+  { name: "Mael",          gender: "Male",       race: "Human"   },
+  { name: "Siw",           gender: "Female",     race: "Human"   },
+  // Driftwood delegation
+  { name: "Aldous Crane",  gender: "Male",       race: "Human"   },
+  { name: "Vess",          gender: "Female",     race: "Human"   },
+  { name: "Calder",        gender: "Male",       race: "Human"   },
+  { name: "Brack",         gender: "Male",       race: "Human"   },
+  { name: "Lotte",         gender: "Female",     race: "Human"   },
+  { name: "Emlyn Hale",    gender: "Male",       race: "Human"   },
+  // Tallowhaven NPCs
+  { name: "Caen Rhys",     gender: "Male",       race: "Human"   },
+  { name: "Morra",         gender: "Female",     race: "Human"   },
+  { name: "Morfudd Pryce", gender: "Male",       race: "Human"   },
+  { name: "Marek Talan",   gender: "Male",       race: "Human"   },
+  { name: "Pen",           gender: "Non-binary", race: "Human"   },
+  // Brindle Hollow
+  { name: "Dav Ostric",    gender: "Male",       race: "Human"   },
+  { name: "Maren Ostric",  gender: "Female",     race: "Human"   },
+  { name: "Fen",           gender: "Male",       race: "Human"   },
+  { name: "Idris",         gender: "Male",       race: "Human"   },
+  { name: "Casimir",       gender: "Male",       race: "Human"   },
+  { name: "Brin",          gender: "Female",     race: "Human"   },
+  // Copper Vine / Amber Cup
+  { name: "Caspar Veld",   gender: "Male",       race: "Human"   },
+  { name: "Perran Carew",  gender: "Male",       race: "Human"   },
+  // Warehouse
+  { name: "Tomas",         gender: "Male",       race: "Human"   },
+  { name: "Pol",           gender: "Male",       race: "Human"   },
+  { name: "Dask",          gender: "Male",       race: "Human"   },
+  { name: "Fetch",         gender: "Male",       race: "Human"   },
+  // Driftwood Road crew
+  { name: "Radek",         gender: "Male",       race: "Human"   },
+  { name: "Thessaly",      gender: "Female",     race: "Elf"     },
+  { name: "Morda",         gender: "Female",     race: "Human"   },
+  { name: "Brek",          gender: "Male",       race: "Dwarf"   },
+  { name: "Gort",          gender: "Male",       race: "Orc"     },
+  { name: "Peck",          gender: "Male",       race: "Gnome"   },
+  // Starling / Coppergate
+  { name: "Drace",         gender: "Male",       race: "Human"   },
+  { name: "Harwick",       gender: "Male",       race: "Human"   },
+  { name: "Sot",           gender: "Male",       race: "Human"   },
+  { name: "Brenna",        gender: "Female",     race: "Human"   },
+  // Trumpet pub
+  { name: "Aldwyn",        gender: "Male",       race: "Human"   },
+  { name: "Osric",         gender: "Male",       race: "Elf"     },
+  { name: "Fenn",          gender: "Male",       race: "Gnome"   },
+  { name: "Brynn",         gender: "Male",       race: "Dwarf"   },
+  { name: "Mags",          gender: "Female",     race: "Human"   },
+  { name: "Davan Holt",    gender: "Male",       race: "Human"   },
+  { name: "Jori",          gender: "Male",       race: "Halfling" },
+  // Nance
+  { name: "Nance",         gender: "Female",     race: "Human"   },
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+// Load the character table — from room metadata if saved, else DEFAULT_CHARACTERS
+async function getCharacterTable() {
+  const roomMeta = await OBR.room.getMetadata();
+  if (roomMeta[`${EXT_ID}/characters`]) {
+    return roomMeta[`${EXT_ID}/characters`];
+  }
+  return DEFAULT_CHARACTERS;
+}
+
+// Look up a character entry by real name (case-insensitive)
+function findCharacter(table, realName) {
+  const lower = realName.toLowerCase().trim();
+  return table.find(c => c.name.toLowerCase().trim() === lower);
+}
+
+// Generate a placeholder name like "Male Dwarf 1"
+// Counts existing tokens on the scene that share the same gender+race placeholder prefix
+async function generatePlaceholder(gender, race) {
+  const prefix = `${gender} ${race}`;
+  const allItems = await OBR.scene.items.getItems(
+    item => item.layer === "CHARACTER"
+  );
+  // Count tokens that already have this prefix in their current name
+  const count = allItems.filter(item => {
+    const meta = item.metadata[META_KEY];
+    return meta && meta.placeholder && meta.placeholder.startsWith(prefix);
+  }).length;
+  return `${prefix} ${count + 1}`;
+}
+
+// ── Context menu ─────────────────────────────────────────────────────────────
+
+OBR.onReady(async () => {
+
+  OBR.contextMenu.create({
+    id: `${EXT_ID}/context-menu`,
+    icons: [
+      {
+        // Shown when token is currently showing REAL name (i.e. not hidden)
+        icon: "/icon.svg",
+        label: "Hide Name (show placeholder)",
+        filter: {
+          every: [
+            { key: "layer", value: "CHARACTER" },
+            { key: ["metadata", META_KEY, "hidden"], value: false },
+          ],
+        },
+      },
+      {
+        // Shown when token is currently showing PLACEHOLDER name (hidden = true)
+        icon: "/icon.svg",
+        label: "Reveal Real Name",
+        filter: {
+          every: [
+            { key: "layer", value: "CHARACTER" },
+            { key: ["metadata", META_KEY, "hidden"], value: true },
+          ],
+        },
+      },
+      {
+        // Shown when token has never been configured by this extension
+        icon: "/icon.svg",
+        label: "Set up name toggle",
+        filter: {
+          every: [
+            { key: "layer", value: "CHARACTER" },
+          ],
+        },
+      },
+    ],
+
+    async onClick(context) {
+      const table = await getCharacterTable();
+
+      for (const item of context.items) {
+        const meta = item.metadata[META_KEY];
+
+        // ── Token not yet set up ─────────────────────────────────────────────
+        if (!meta) {
+          const realName = item.name ? item.name.trim() : "";
+          const entry = findCharacter(table, realName);
+
+          let placeholder;
+          if (entry) {
+            placeholder = await generatePlaceholder(entry.gender, entry.race);
+          } else {
+            // Not in table — use generic placeholder
+            placeholder = `Unknown ${await generatePlaceholder("Unknown", "Figure")}`;
+          }
+
+          // Store data and set to hidden (placeholder shown) immediately
+          await OBR.scene.items.updateItems([item.id], (items) => {
+            for (const it of items) {
+              it.metadata[META_KEY] = {
+                realName: realName,
+                placeholder: placeholder,
+                hidden: true,
+              };
+              // Switch display name to placeholder
+              it.name = placeholder;
+              // Update Forge metadata if present
+              if (it.metadata[FORGE_NAME_KEY] !== undefined) {
+                it.metadata[FORGE_NAME_KEY] = placeholder;
+              }
+            }
+          });
+
+          await OBR.notification.show(
+            `"${realName}" → placeholder "${placeholder}" set. Name is now hidden.`,
+            "INFO"
+          );
+          return;
+        }
+
+        // ── Toggle existing token ────────────────────────────────────────────
+        const nowHidden = meta.hidden;
+
+        await OBR.scene.items.updateItems([item.id], (items) => {
+          for (const it of items) {
+            const d = it.metadata[META_KEY];
+            if (!d) return;
+
+            if (nowHidden) {
+              // Reveal real name
+              it.name = d.realName;
+              if (it.metadata[FORGE_NAME_KEY] !== undefined) {
+                it.metadata[FORGE_NAME_KEY] = d.realName;
+              }
+              d.hidden = false;
+            } else {
+              // Hide — show placeholder
+              it.name = d.placeholder;
+              if (it.metadata[FORGE_NAME_KEY] !== undefined) {
+                it.metadata[FORGE_NAME_KEY] = d.placeholder;
+              }
+              d.hidden = true;
+            }
+          }
+        });
+      }
+    },
+  });
+
+});
+</script>
+</body>
+</html>

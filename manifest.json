@@ -1,0 +1,19 @@
+{
+  "author": "Abelon Campaign",
+  "name": "Abelon Namer",
+  "description": "Toggle NPC tokens between their real name and a descriptive placeholder. Manage the character lookup table from the settings panel.",
+  "version": "1.0.0",
+  "icon": "/icon.svg",
+  "tokens": [],
+  "listed": false,
+  "background": {
+    "url": "/background.html"
+  },
+  "action": {
+    "title": "Abelon Namer — Settings",
+    "icon": "/icon.svg",
+    "url": "/settings.html",
+    "height": 600,
+    "width": 480
+  }
+}
