@@ -610,6 +610,9 @@ window.anonymiseAll = async function() {
         it.metadata = {
           ...it.metadata,
           [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: true },
+          ...(it.metadata["com.battle-system.forge/name"] !== undefined && {
+            "com.battle-system.forge/name": d.placeholder,
+          }),
         };
       }
     });
@@ -644,6 +647,9 @@ window.revealAll = async function() {
         it.metadata = {
           ...it.metadata,
           [META_KEY]: { realName: d.realName, placeholder: d.placeholder, hidden: false },
+          ...(it.metadata["com.battle-system.forge/name"] !== undefined && {
+            "com.battle-system.forge/name": d.realName,
+          }),
         };
       }
     });
