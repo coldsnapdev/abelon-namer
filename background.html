@@ -94,6 +94,21 @@ const DEFAULT_CHARACTERS = [
   { name: "Jori",            gender: "Male",       race: "Halfling" },
   // Nance
   { name: "Nance",           gender: "Female",     race: "Human"    },
+  // Act 2 additions
+  { name: "Bors",            gender: "Male",        race: "Human"        },
+  { name: "Bren",            gender: "Male",        race: "Human"        },
+  { name: "Coll",            gender: "Male",        race: "Human"        },
+  { name: "Emwyn",           gender: "Male",        race: "Gnome"        },
+  { name: "Foss",            gender: "Female",      race: "Human"        },
+  { name: "Jorak",           gender: "Male",        race: "Dragonborn"   },
+  { name: "Merse",           gender: "Female",      race: "Dwarf"        },
+  { name: "Neva",            gender: "Female",      race: "Half-elf"     },
+  { name: "Orin",            gender: "Female",      race: "Half-orc"     },
+  { name: "Palla",           gender: "Female",      race: "Human"        },
+  { name: "Porrin",          gender: "Male",        race: "Halfling"     },
+  { name: "Sela",            gender: "Female",      race: "Tiefling"     },
+  { name: "Tam",             gender: "Male",        race: "Elf"          },
+  { name: "Yssel",           gender: "Female",      race: "Wood Elf"     },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -210,9 +225,6 @@ OBR.onReady(async () => {
     ],
 
     async onClick(context) {
-      const role = await OBR.player.getRole();
-      if (role !== "GM") return;
-
       const table = await getCharacterTable();
 
       for (const item of context.items) {
@@ -325,12 +337,9 @@ OBR.onReady(async () => {
 
 OBR.onReady(async () => {
 
-  // Hide the action icon entirely for non-GM players
+  // Only register for GM — players never see this menu
   const role = await OBR.player.getRole();
-  if (role !== "GM") {
-    await OBR.action.hide();
-    return;
-  }
+  if (role !== "GM") return;
 
   OBR.contextMenu.create({
     id: `${EXT_ID}/reset-menu`,
@@ -358,9 +367,6 @@ OBR.onReady(async () => {
     ],
 
     async onClick(context) {
-      const role = await OBR.player.getRole();
-      if (role !== "GM") return;
-
       for (const item of context.items) {
         const meta = item.metadata[META_KEY];
         if (!meta) continue;
