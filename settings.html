@@ -219,6 +219,7 @@
 <div class="toolbar">
   <input type="text" id="search" placeholder="Search characters…">
   <button class="primary" onclick="saveTable()">Save to Room</button>
+  <button onclick="addNewDefaults()">Add New Defaults</button>
   <button onclick="resetToDefaults()">Reset to Defaults</button>
 </div>
 
@@ -233,11 +234,15 @@
   </select>
   <select id="new-race">
     <option>Human</option>
+    <option>Aasimar</option>
+    <option>Dragonborn</option>
     <option>Dwarf</option>
     <option>Elf</option>
     <option>Gnome</option>
+    <option>Goliath</option>
     <option>Halfling</option>
     <option>Orc</option>
+    <option>Tiefling</option>
     <option>Other</option>
   </select>
   <button class="success" onclick="addCharacter()">+ Add</button>
@@ -519,12 +524,25 @@ const DEFAULT_CHARACTERS = [
   { name: "Mabli",          gender: "Female",     race: "Halfling"     },
   { name: "Quillon",        gender: "Male",       race: "Gnome"        },
   { name: "Nim",            gender: "Female",     race: "Gnome"        },
-  { name: "Ilar",           gender: "Non-binary", race: "Half-elf"     },
-  { name: "Durk",           gender: "Male",       race: "Half-orc"     },
-  { name: "Grenna",         gender: "Female",     race: "Half-orc"     },
+  { name: "Ilar",           gender: "Non-binary", race: "Elf"          },
+  { name: "Durk",           gender: "Male",       race: "Orc"          },
+  { name: "Grenna",         gender: "Female",     race: "Orc"          },
   { name: "Hush",           gender: "Non-binary", race: "Tiefling"     },
   { name: "Kaveth",         gender: "Male",       race: "Dragonborn"   },
 ];
+
+window.addNewDefaults = async function() {
+  const have = new Set(characters.map(c => c.name.toLowerCase().trim()));
+  const missing = DEFAULT_CHARACTERS.filter(c => !have.has(c.name.toLowerCase().trim()));
+  if (missing.length === 0) {
+    setStatus("Nothing new: every default character is already in the table.", "ok");
+    return;
+  }
+  characters = characters.concat(JSON.parse(JSON.stringify(missing)));
+  renderTable(document.getElementById("search").value);
+  await saveTable();
+  setStatus(`Added ${missing.length} new default characters and saved. Your own additions are untouched.`, "ok");
+};
 
 window.resetToDefaults = function() {
   if (!confirm("Reset to the built-in default character list? Any custom additions will be lost.")) return;
